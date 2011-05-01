@@ -6,6 +6,9 @@ import java.io.IOException;
 
 import javax.servlet.ServletException;
 
+import org.acegisecurity.Authentication;
+import org.acegisecurity.AuthenticationException;
+import org.acegisecurity.AuthenticationManager;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import hudson.Extension;
@@ -35,8 +38,11 @@ public class SSOKerberosSecurityRealm extends SecurityRealm{
 	
 	@Override
 	public SecurityComponents createSecurityComponents() {
-		
-		return new SecurityComponents();
+		return new SecurityComponents(new AuthenticationManager() {
+            public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+                return authentication;
+            }
+        });
 	}
 	
 	
