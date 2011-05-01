@@ -23,7 +23,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.springframework.dao.DataAccessException;
 
 /**
- * @author Kohsuke Kawaguchi
+ * @author Marcelo Brunken
  */
 public class KerberosSecurityRealm extends AbstractPasswordBasedSecurityRealm {
 	@DataBoundConstructor

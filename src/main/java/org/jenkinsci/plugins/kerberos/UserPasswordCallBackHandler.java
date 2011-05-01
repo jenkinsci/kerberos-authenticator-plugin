@@ -8,6 +8,9 @@ import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 
+/**
+ * @author Marcelo Brunken
+ */
 public class UserPasswordCallBackHandler implements CallbackHandler {
 
     /**
