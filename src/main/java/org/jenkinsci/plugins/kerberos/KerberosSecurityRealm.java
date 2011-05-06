@@ -30,6 +30,9 @@ public class KerberosSecurityRealm extends AbstractPasswordBasedSecurityRealm {
 	public KerberosSecurityRealm(String kdc, String realm) {
 		this.realm = realm;
 		this.kdc = kdc;
+		
+		setUpKerberos();
+		
 	}
 
 	private String kdc;
@@ -47,6 +50,7 @@ public class KerberosSecurityRealm extends AbstractPasswordBasedSecurityRealm {
 					username, password));
 
 			lc.login();
+			
 			return new User(username, "", true, true, true, true,
 					new GrantedAuthority[] { AUTHENTICATED_AUTHORITY });
 

@@ -1,29 +1,45 @@
 package org.jenkinsci.plugins.kerberos;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.security.SecurityRealm;
 import hudson.util.PluginServletFilter;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.PrivilegedActionException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.security.auth.login.LoginException;
+import javax.servlet.ServletException;
+
+import net.sourceforge.spnego.SpnegoAuthenticator;
+
+import org.acegisecurity.Authentication;
+import org.acegisecurity.AuthenticationException;
+import org.acegisecurity.AuthenticationManager;
+import org.ietf.jgss.GSSException;
+import org.kohsuke.stapler.DataBoundConstructor;
+
 public class SSOKerberosSecurityRealm extends SecurityRealm{
+	
+	private SpnegoAuthenticator authenticator;
 	
 	@DataBoundConstructor
 	public SSOKerberosSecurityRealm(String kdc, String realm) {
 		this.realm = realm;
 		this.kdc = kdc;
+		try{
 		setUpKerberos();
-		
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 		try {
-			PluginServletFilter.addFilter(new KerberosAuthenticationFilter());
+			PluginServletFilter.addFilter(new KerberosAuthenticationFilter(authenticator));
 		} catch (ServletException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -35,12 +51,15 @@ public class SSOKerberosSecurityRealm extends SecurityRealm{
 	
 	@Override
 	public SecurityComponents createSecurityComponents() {
-		
-		return new SecurityComponents();
+		return new SecurityComponents(new AuthenticationManager() {
+            public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+                return authentication;
+            }
+        });
 	}
 	
 	
-	private void setUpKerberos() {
+	private void setUpKerberos() throws LoginException, FileNotFoundException, GSSException, PrivilegedActionException, URISyntaxException {
 		
 		try {
 			createConfigFiles();
@@ -49,10 +68,34 @@ public class SSOKerberosSecurityRealm extends SecurityRealm{
 			e.printStackTrace();
 		}
 		
+		
+		Map<String, String> props = new HashMap<String, String>();
+		props.put("spnego.krb5.conf", Hudson.getInstance()
+				.getRootDir().getPath()
+				+ "/krb5.conf");
+		
+		props.put("spnego.login.conf", Hudson
+				.getInstance().getRootDir().getPath()
+				+ "/jaas.conf");
+		props.put("spnego.allow.basic", "true");
+		props.put("spnego.allow.unsecure.basic","true");
+		props.put("spnego.prompt.ntlm","true");
+		props.put("spnego.logger.level", "1");
+		props.put("spnego.login.client.module", "spnego-client");
+		props.put("spnego.login.server.module", "spnego-server");
+		
+		
+		
+		
+		
+		
+		authenticator = new SpnegoAuthenticator(props);
+		
 		System.setProperty("java.security.krb5.realm", realm);
 		System.setProperty("java.security.krb5.kdc", kdc);
 		System.setProperty("http.auth.preference", "SSPI");
 		System.setProperty("sun.security.krb5.debug", "true");
+		
 		System.setProperty("java.security.krb5.conf", Hudson.getInstance()
 				.getRootDir().getPath()
 				+ "/krb5.conf");
@@ -98,6 +141,15 @@ public class SSOKerberosSecurityRealm extends SecurityRealm{
 			writer.write("     com.sun.security.auth.module.Krb5LoginModule required\n");
 			writer.write(" doNotPrompt=false useTicketCache=true useKeyTab=false;\n");
 			writer.write("};");
+			writer.write("spnego-client {");
+			writer.write("	com.sun.security.auth.module.Krb5LoginModule required;");
+			writer.write("};");
+			writer.write("spnego-server {");
+			writer.write("  com.sun.security.auth.module.Krb5LoginModule required");
+			writer.write("  storeKey=true");
+			writer.write("  isInitiator=false;");
+			writer.write("};");
+			
 			
 			writer.flush();
 			writer.close();
@@ -121,7 +173,7 @@ public class SSOKerberosSecurityRealm extends SecurityRealm{
 		this.realm = realm;
 	}
 	
-	@Extension
+	//@Extension
 	public static class DescriptorImpl extends Descriptor<SecurityRealm> {
 
 		@Override
