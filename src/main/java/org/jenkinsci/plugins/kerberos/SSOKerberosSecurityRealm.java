@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.kerberos;
 
+<<<<<<< HEAD
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.security.SecurityRealm;
@@ -29,10 +30,32 @@ public class SSOKerberosSecurityRealm extends SecurityRealm{
 	
 	private SpnegoAuthenticator authenticator;
 	
+=======
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+
+import org.acegisecurity.Authentication;
+import org.acegisecurity.AuthenticationException;
+import org.acegisecurity.AuthenticationManager;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import hudson.Extension;
+import hudson.model.Descriptor;
+import hudson.model.Hudson;
+import hudson.security.SecurityRealm;
+import hudson.util.PluginServletFilter;
+
+public class SSOKerberosSecurityRealm extends SecurityRealm{
+	
+>>>>>>> 5f2101250c57ac8314f4a9d76869462177226b77
 	@DataBoundConstructor
 	public SSOKerberosSecurityRealm(String kdc, String realm) {
 		this.realm = realm;
 		this.kdc = kdc;
+<<<<<<< HEAD
 		try{
 		setUpKerberos();
 		}catch(Exception e){
@@ -40,6 +63,12 @@ public class SSOKerberosSecurityRealm extends SecurityRealm{
 		}
 		try {
 			PluginServletFilter.addFilter(new KerberosAuthenticationFilter(authenticator));
+=======
+		setUpKerberos();
+		
+		try {
+			PluginServletFilter.addFilter(new KerberosAuthenticationFilter());
+>>>>>>> 5f2101250c57ac8314f4a9d76869462177226b77
 		} catch (ServletException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -59,7 +88,11 @@ public class SSOKerberosSecurityRealm extends SecurityRealm{
 	}
 	
 	
+<<<<<<< HEAD
 	private void setUpKerberos() throws LoginException, FileNotFoundException, GSSException, PrivilegedActionException, URISyntaxException {
+=======
+	private void setUpKerberos() {
+>>>>>>> 5f2101250c57ac8314f4a9d76869462177226b77
 		
 		try {
 			createConfigFiles();
@@ -68,6 +101,7 @@ public class SSOKerberosSecurityRealm extends SecurityRealm{
 			e.printStackTrace();
 		}
 		
+<<<<<<< HEAD
 		
 		Map<String, String> props = new HashMap<String, String>();
 		props.put("spnego.krb5.conf", Hudson.getInstance()
@@ -91,11 +125,16 @@ public class SSOKerberosSecurityRealm extends SecurityRealm{
 		
 		authenticator = new SpnegoAuthenticator(props);
 		
+=======
+>>>>>>> 5f2101250c57ac8314f4a9d76869462177226b77
 		System.setProperty("java.security.krb5.realm", realm);
 		System.setProperty("java.security.krb5.kdc", kdc);
 		System.setProperty("http.auth.preference", "SSPI");
 		System.setProperty("sun.security.krb5.debug", "true");
+<<<<<<< HEAD
 		
+=======
+>>>>>>> 5f2101250c57ac8314f4a9d76869462177226b77
 		System.setProperty("java.security.krb5.conf", Hudson.getInstance()
 				.getRootDir().getPath()
 				+ "/krb5.conf");
@@ -141,6 +180,7 @@ public class SSOKerberosSecurityRealm extends SecurityRealm{
 			writer.write("     com.sun.security.auth.module.Krb5LoginModule required\n");
 			writer.write(" doNotPrompt=false useTicketCache=true useKeyTab=false;\n");
 			writer.write("};");
+<<<<<<< HEAD
 			writer.write("spnego-client {");
 			writer.write("	com.sun.security.auth.module.Krb5LoginModule required;");
 			writer.write("};");
@@ -150,6 +190,8 @@ public class SSOKerberosSecurityRealm extends SecurityRealm{
 			writer.write("  isInitiator=false;");
 			writer.write("};");
 			
+=======
+>>>>>>> 5f2101250c57ac8314f4a9d76869462177226b77
 			
 			writer.flush();
 			writer.close();
@@ -173,7 +215,11 @@ public class SSOKerberosSecurityRealm extends SecurityRealm{
 		this.realm = realm;
 	}
 	
+<<<<<<< HEAD
 	//@Extension
+=======
+	@Extension
+>>>>>>> 5f2101250c57ac8314f4a9d76869462177226b77
 	public static class DescriptorImpl extends Descriptor<SecurityRealm> {
 
 		@Override
