@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.kerberos;
 
+import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.security.SecurityRealm;
@@ -18,6 +19,7 @@ import javax.security.auth.login.LoginException;
 import javax.servlet.ServletException;
 
 import net.sourceforge.spnego.SpnegoAuthenticator;
+import net.sourceforge.spnego.SpnegoHttpFilter.Constants;
 
 import org.acegisecurity.Authentication;
 import org.acegisecurity.AuthenticationException;
@@ -27,40 +29,23 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 public class SSOKerberosSecurityRealm extends SecurityRealm {
 
-	private SpnegoAuthenticator authenticator;
-
 	@DataBoundConstructor
-	public SSOKerberosSecurityRealm(String kdc, String realm) {
+	public SSOKerberosSecurityRealm(String kdc, String realm, Boolean overwrite) {
 		this.realm = realm;
 		this.kdc = kdc;
+		this.overwrite = overwrite;
 
 		try {
 			setUpKerberos();
 		} catch (Exception e) {
 			e.printStackTrace();
+			return;
 		}
 		try {
-			PluginServletFilter.addFilter(new KerberosAuthenticationFilter(
-					authenticator));
 
-			setUpKerberos();
+			PluginServletFilter.addFilter(new KerberosAuthenticationFilter());
 
-		} catch (ServletException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (LoginException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (GSSException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (PrivilegedActionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -68,6 +53,7 @@ public class SSOKerberosSecurityRealm extends SecurityRealm {
 
 	private String kdc;
 	private String realm;
+	private Boolean overwrite;
 
 	@Override
 	public SecurityComponents createSecurityComponents() {
@@ -84,40 +70,16 @@ public class SSOKerberosSecurityRealm extends SecurityRealm {
 
 		try {
 			createConfigFiles();
+			System.setProperty("java.security.krb5.realm", realm);
+			System.setProperty("java.security.krb5.kdc", kdc);
+			System.setProperty("http.auth.preference", "SSPI");
+			System.setProperty("sun.security.krb5.debug", "false");
+			System.setProperty("javax.security.auth.useSubjectCredsOnly",
+					"false");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		Map<String, String> props = new HashMap<String, String>();
-		props.put("spnego.krb5.conf", Hudson.getInstance().getRootDir()
-				.getPath()
-				+ "/krb5.conf");
-
-		props.put("spnego.login.conf", Hudson.getInstance().getRootDir()
-				.getPath()
-				+ "/jaas.conf");
-		props.put("spnego.allow.basic", "true");
-		props.put("spnego.allow.unsecure.basic", "true");
-		props.put("spnego.prompt.ntlm", "true");
-		props.put("spnego.logger.level", "1");
-		props.put("spnego.login.client.module", "spnego-client");
-		props.put("spnego.login.server.module", "spnego-server");
-
-		authenticator = new SpnegoAuthenticator(props);
-
-		System.setProperty("java.security.krb5.realm", realm);
-		System.setProperty("java.security.krb5.kdc", kdc);
-		System.setProperty("http.auth.preference", "SSPI");
-		System.setProperty("sun.security.krb5.debug", "true");
-
-		System.setProperty("java.security.krb5.conf", Hudson.getInstance()
-				.getRootDir().getPath()
-				+ "/krb5.conf");
-		System.setProperty("javax.security.auth.useSubjectCredsOnly", "true");
-		System.setProperty("java.security.auth.login.config", Hudson
-				.getInstance().getRootDir().getPath()
-				+ "/jaas.conf");
 
 	}
 
@@ -129,6 +91,9 @@ public class SSOKerberosSecurityRealm extends SecurityRealm {
 
 		File krbConf = new File(Hudson.getInstance().getRootDir().getPath()
 				+ "/krb5.conf");
+		if (overwrite && krbConf.exists()) {
+			krbConf.delete();
+		}
 
 		if (!krbConf.exists()) {
 			krbConf.createNewFile();
@@ -148,6 +113,10 @@ public class SSOKerberosSecurityRealm extends SecurityRealm {
 		File jaasConf = new File(Hudson.getInstance().getRootDir().getPath()
 				+ "/jaas.conf");
 
+		if (overwrite && jaasConf.exists()) {
+			jaasConf.delete();
+		}
+
 		if (!jaasConf.exists()) {
 			jaasConf.createNewFile();
 
@@ -158,13 +127,23 @@ public class SSOKerberosSecurityRealm extends SecurityRealm {
 			writer.write("};");
 
 			writer.write("spnego-client {");
-			writer.write("	com.sun.security.auth.module.Krb5LoginModule required;");
+			writer.write("	com.sun.security.auth.module.Krb5LoginModule required;\n");
+			writer.write("}\n;");
+			writer.write("spnego-server {\n");
+			writer.write("  com.sun.security.auth.module.Krb5LoginModule required storeKey=true isInitiator=false useKeyTab=false;\n");
+			writer.write("};\n");
+
+			writer.write("com.sun.security.jgss.initiate {\n");
+			writer.write(" com.sun.security.auth.module.Krb5LoginModule required\n");
+			writer.write(" doNotPrompt=true\n");
+			writer.write(" storeKey=true;\n");
 			writer.write("};");
-			writer.write("spnego-server {");
-			writer.write("  com.sun.security.auth.module.Krb5LoginModule required");
-			writer.write("  storeKey=true");
-			writer.write("  isInitiator=false;");
-			writer.write("};");
+			writer.write("com.sun.security.jgss.accept {\n");
+			writer.write(" com.sun.security.auth.module.Krb5LoginModule required\n");
+			writer.write(" useKeyTab=false\n");
+			writer.write(" storeKey=true;\n");
+
+			writer.write("};\n");
 
 			writer.flush();
 			writer.close();
@@ -188,8 +167,15 @@ public class SSOKerberosSecurityRealm extends SecurityRealm {
 		this.realm = realm;
 	}
 
-	// @Extension
+	public Boolean getOverwrite() {
+		return overwrite;
+	}
 
+	public void setOverwrite(Boolean overwrite) {
+		this.overwrite = overwrite;
+	}
+
+	@Extension
 	public static class DescriptorImpl extends Descriptor<SecurityRealm> {
 
 		@Override

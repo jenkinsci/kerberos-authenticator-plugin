@@ -27,16 +27,18 @@ import org.springframework.dao.DataAccessException;
  */
 public class KerberosSecurityRealm extends AbstractPasswordBasedSecurityRealm {
 	@DataBoundConstructor
-	public KerberosSecurityRealm(String kdc, String realm) {
+	public KerberosSecurityRealm(String kdc, String realm, Boolean overwrite) {
 		this.realm = realm;
 		this.kdc = kdc;
-		
+		this.overwrite = overwrite;
+
 		setUpKerberos();
-		
+
 	}
 
 	private String kdc;
 	private String realm;
+	private Boolean overwrite;
 
 	@Override
 	protected UserDetails authenticate(String username, String password)
@@ -50,7 +52,7 @@ public class KerberosSecurityRealm extends AbstractPasswordBasedSecurityRealm {
 					username, password));
 
 			lc.login();
-			
+
 			return new User(username, "", true, true, true, true,
 					new GrantedAuthority[] { AUTHENTICATED_AUTHORITY });
 
@@ -62,14 +64,14 @@ public class KerberosSecurityRealm extends AbstractPasswordBasedSecurityRealm {
 	}
 
 	private void setUpKerberos() {
-		
+
 		try {
 			createConfigFiles();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		System.setProperty("java.security.krb5.realm", realm);
 		System.setProperty("java.security.krb5.kdc", kdc);
 		System.setProperty("http.auth.preference", "SSPI");
@@ -85,10 +87,16 @@ public class KerberosSecurityRealm extends AbstractPasswordBasedSecurityRealm {
 	}
 
 	private void createConfigFiles() throws IOException {
-		// Jenkins will write new default kerberos config stuff, if they are not found on JENKINS_HOME
-		
+		// Jenkins will write new default kerberos config stuff, if they are not
+		// found on JENKINS_HOME
+
 		File krbConf = new File(Hudson.getInstance().getRootDir().getPath()
 				+ "/krb5.conf");
+
+		if (overwrite && krbConf.exists()) {
+			krbConf.delete();
+		}
+
 		if (!krbConf.exists()) {
 			krbConf.createNewFile();
 
@@ -103,9 +111,13 @@ public class KerberosSecurityRealm extends AbstractPasswordBasedSecurityRealm {
 			writer.flush();
 			writer.close();
 		}
-		
+
 		File jaasConf = new File(Hudson.getInstance().getRootDir().getPath()
 				+ "/jaas.conf");
+
+		if (overwrite && jaasConf.exists()) {
+			jaasConf.delete();
+		}
 		if (!jaasConf.exists()) {
 			jaasConf.createNewFile();
 
@@ -114,7 +126,7 @@ public class KerberosSecurityRealm extends AbstractPasswordBasedSecurityRealm {
 			writer.write("     com.sun.security.auth.module.Krb5LoginModule required\n");
 			writer.write(" doNotPrompt=false useTicketCache=false useKeyTab=false;\n");
 			writer.write("};");
-			
+
 			writer.flush();
 			writer.close();
 		}
@@ -148,6 +160,14 @@ public class KerberosSecurityRealm extends AbstractPasswordBasedSecurityRealm {
 
 	public void setRealm(String realm) {
 		this.realm = realm;
+	}
+
+	public Boolean getOverwrite() {
+		return overwrite;
+	}
+
+	public void setOverwrite(Boolean overwrite) {
+		this.overwrite = overwrite;
 	}
 
 	@Extension
