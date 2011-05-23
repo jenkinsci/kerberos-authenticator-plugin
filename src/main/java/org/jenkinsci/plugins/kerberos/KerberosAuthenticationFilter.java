@@ -4,14 +4,10 @@ import hudson.Functions;
 import hudson.model.Hudson;
 import hudson.security.SecurityRealm;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.security.PrivilegedActionException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.security.auth.login.LoginException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -29,7 +25,6 @@ import net.sourceforge.spnego.SpnegoPrincipal;
 import org.acegisecurity.GrantedAuthority;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
-import org.ietf.jgss.GSSException;
 
 public class KerberosAuthenticationFilter implements Filter {
 
@@ -47,7 +42,7 @@ public class KerberosAuthenticationFilter implements Filter {
 				.getPath()
 				+ "/jaas.conf");
 		props.put(Constants.ALLOW_BASIC, "true");
-		props.put("spnego.allow.localhost", "false");
+		props.put("spnego.allow.localhost", "true");
 		props.put("spnego.allow.unsecure.basic", "true");
 		props.put("spnego.login.client.module", "spnego-client");
 		props.put("spnego.krb5.conf", Hudson.getInstance().getRootDir()
@@ -56,8 +51,8 @@ public class KerberosAuthenticationFilter implements Filter {
 		props.put("spnego.login.conf", Hudson.getInstance().getRootDir()
 				.getPath()
 				+ "/jaas.conf");
-		props.put("spnego.preauth.username", "empty");
-		props.put("spnego.preauth.password", "empty");
+		props.put("spnego.preauth.username", "meh");
+		props.put("spnego.preauth.password", "meh");
 		props.put("spnego.login.server.module", "spnego-server");
 		props.put("spnego.prompt.ntlm", "true");
 		props.put("spnego.allow.delegation", "true");
