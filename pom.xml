@@ -9,7 +9,7 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>kerberos-authenticator</artifactId>
+	<artifactId>kerberos-authenticator-plugin</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 
