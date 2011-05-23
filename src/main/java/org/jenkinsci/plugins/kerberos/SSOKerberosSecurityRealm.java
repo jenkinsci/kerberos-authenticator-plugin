@@ -130,7 +130,7 @@ public class SSOKerberosSecurityRealm extends SecurityRealm {
 			writer.write("	com.sun.security.auth.module.Krb5LoginModule required;\n");
 			writer.write("}\n;");
 			writer.write("spnego-server {\n");
-			writer.write("  com.sun.security.auth.module.Krb5LoginModule required storeKey=true isInitiator=false useKeyTab=false;\n");
+			writer.write("  com.sun.security.auth.module.Krb5LoginModule required storeKey=true isInitiator=false useKeyTab=false tryFirstPass=true storePass=true;\n");
 			writer.write("};\n");
 
 			writer.write("com.sun.security.jgss.initiate {\n");
