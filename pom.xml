@@ -16,7 +16,11 @@
 	<!-- get every artifact through maven.glassfish.org, which proxies all the 
 		artifacts that we need -->
 
-	
+	<scm>
+		<connection>scm:git:ssh://github.com/jenkinsci/kerberos-authenticator-plugin.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/jenkinsci/kerberos-authenticator-plugin.git</developerConnection>
+		<url>https://github.com/jenkinsci/kerberos-authenticator-plugin</url>
+	</scm>
 
 	<repositories>
 		<repository>
