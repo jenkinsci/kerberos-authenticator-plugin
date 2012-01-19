@@ -1,0 +1,38 @@
+10
+
+dir
+5368
+svn+ssh://svn-core-695/core/kerberos-authenticator-plugin/trunk/src/main/resources/org/jenkinsci
+svn+ssh://svn-core-695/core
+
+
+
+2012-01-13T13:37:50.609000Z
+5368
+mbrunken
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+d1dbc446-1932-4199-ad6d-8de634d1db56
+
+
+
+
+
+
+0
+
+plugins
+dir
+

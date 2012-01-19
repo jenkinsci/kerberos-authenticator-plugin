@@ -1,0 +1,5 @@
+<div>
+  <p>
+    The kerberos config files (krb5.conf and jaas.conf) will be created on the HUDSON_HOME if they not exist, they can be edited for more advanced configurations.
+  </p>
+</div>

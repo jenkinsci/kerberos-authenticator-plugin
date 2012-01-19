@@ -26,23 +26,9 @@
    <f:entry title="Realm" field="realm">
     <f:textbox />
   </f:entry>
-
-
-  <f:entry title="Kerberos Config File (Optional)" field="krbConf">
-    <f:textbox />
-  </f:entry>
-
-  <f:entry title="Pre-auth User" field="user">
-    <f:textbox />
-  </f:entry>
-
-  <f:entry title="Pre-auth Password" field="password">
-    <f:password />
-  </f:entry>
   
-  <f:entry title="Overwrite Config Files" field="overwrite">
+   <f:entry title="Overwrite Config Files" field="overwrite">
     <f:checkbox />
   </f:entry>
-  
   </f:section>
 </j:jelly>
